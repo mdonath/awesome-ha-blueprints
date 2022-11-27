@@ -2,7 +2,7 @@
 blueprint:
   name: Controller - IKEA E2001/E2002 STYRBAR Remote control
   description: |
-    # Controller - IKEA E2001/E2002 STYRBAR Remote control
+    # Controller - IKEA E2001/E2002 STYRBAR Remote control - MODIFIED
 
     Controller automation for executing any kind of action triggered by the provided IKEA E2001/E2002 STYRBAR Remote control. Allows to optionally loop an action on a button long press.
     Supports deCONZ, ZHA, Zigbee2MQTT.
@@ -200,6 +200,18 @@ blueprint:
           max: 5000
           mode: slider
           step: 1
+    button_up_long_repeat_delay:
+      name: (Required) Up button long press - Delay between loop repeats
+      description: >-
+        The delay in milliseconds between repeats of the custom action, when looping is enabled.
+        Use it to make the repeats slower.
+      default: 500
+      selector:
+        number:
+          min: 1
+          max: 1000
+          mode: slider
+          step: 1
     button_down_long_loop:
       name: (Optional) Down button long press - loop until release
       description: Loop the down button action until the button is released.
@@ -216,6 +228,18 @@ blueprint:
         number:
           min: 1
           max: 5000
+          mode: slider
+          step: 1
+    button_down_long_repeat_delay:
+      name: (Required) Down button long press - Delay between loop repeats
+      description: >-
+        The delay in milliseconds between repeats of the custom action, when looping is enabled.
+        Use it to make the repeats slower.
+      default: 500
+      selector:
+        number:
+          min: 1
+          max: 1000
           mode: slider
           step: 1
     # inputs for enabling double press events
@@ -280,9 +304,11 @@ variables:
   button_right_double_press: !input button_right_double_press
   button_up_long_loop: !input button_up_long_loop
   button_up_long_max_loop_repeats: !input button_up_long_max_loop_repeats
+  button_up_long_repeat_delay: !input button_up_long_repeat_delay
   button_up_double_press: !input button_up_double_press
   button_down_long_loop: !input button_down_long_loop
   button_down_long_max_loop_repeats: !input button_down_long_max_loop_repeats
+  button_down_long_repeat_delay: !input button_down_long_repeat_delay
   button_down_double_press: !input button_down_double_press
   helper_last_controller_event: !input helper_last_controller_event
   helper_double_press_delay: !input helper_double_press_delay
@@ -644,7 +670,12 @@ action:
                 sequence:
                   - repeat:
                       while: '{{ repeat.index < button_up_long_max_loop_repeats | int }}'
-                      sequence: !input action_button_up_long
+                      sequence:
+                        - choose:
+                            conditions: []
+                            sequence: !input action_button_up_long
+                        - delay:
+                            milliseconds: !input button_up_long_repeat_delay
             # if looping is not enabled run the custom action only once
             default: !input action_button_up_long
       - conditions:
@@ -727,7 +758,12 @@ action:
                 sequence:
                   - repeat:
                       while: '{{ repeat.index < button_down_long_max_loop_repeats | int }}'
-                      sequence: !input action_button_down_long
+                      sequence:
+                        - choose:
+                            conditions: []
+                            sequence: !input action_button_down_long
+                        - delay:
+                            milliseconds: !input button_down_long_repeat_delay
             # if looping is not enabled run the custom action only once
             default: !input action_button_down_long
       - conditions:
